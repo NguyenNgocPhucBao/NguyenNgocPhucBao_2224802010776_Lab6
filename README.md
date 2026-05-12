@@ -47,31 +47,6 @@
 - shared_preferences (lưu cài đặt)
 - path_provider
 
-## 📂 Cấu trúc dự án
-\```bash
-lib/
-├── models/
-│   └── song_model.dart
-├── providers/
-│   ├── audio_provider.dart
-│   ├── playlist_provider.dart
-│   └── theme_provider.dart
-├── screens/
-│   ├── home_screen.dart
-│   └── now_playing_screen.dart
-├── services/
-│   ├── audio_player_service.dart
-│   ├── playlist_service.dart
-│   ├── permission_service.dart
-│   └── storage_service.dart
-├── widgets/
-│   ├── mini_player.dart
-│   ├── song_tile.dart
-│   ├── player_controls.dart
-│   └── progress_bar.dart
-└── main.dart
-\```
-
 ---
 
 ## 🚀 Hướng dẫn chạy dự án
