@@ -49,22 +49,6 @@
 
 ---
 
-## 🚀 Hướng dẫn chạy dự án
-
-Clone project
-\```bash
-git clone https://github.com/NguyenNgocPhucBao/NguyenNgocPhucBao_2224802010776_Lab6
-cd offline_music_player
-\```
-
-Cài đặt dependencies và chạy ứng dụng
-\```bash
-flutter pub get
-flutter run
-\```
-
----
-
 ## ⚠️ Hạn chế
 - Chưa hỗ trợ playlist tùy chỉnh
 - Chưa có equalizer
