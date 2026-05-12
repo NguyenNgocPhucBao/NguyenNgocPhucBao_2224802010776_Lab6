@@ -15,6 +15,20 @@ class PlaylistProvider extends ChangeNotifier {
 
   Future<void> _loadPlaylists() async {
     _playlists = await _storageService.getPlaylists();
+
+    // Tạo playlist mẫu nếu chưa có
+    if (_playlists.isEmpty) {
+      final defaultPlaylist = PlaylistModel(
+        id: 'default',
+        name: 'Yêu thích',
+        songIds: ['1', '2'],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      _playlists.add(defaultPlaylist);
+      await _storageService.savePlaylists(_playlists);
+    }
+
     notifyListeners();
   }
 

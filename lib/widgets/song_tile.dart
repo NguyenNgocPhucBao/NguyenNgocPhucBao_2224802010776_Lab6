@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/song_model.dart';
+import '../providers/playlist_provider.dart';
 import '../utils/constants.dart';
 
 class SongTile extends StatelessWidget {
@@ -45,21 +47,21 @@ class SongTile extends StatelessWidget {
   }
 
   Widget _buildAlbumArt() {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
-        color: AppColors.cardBackground,
-      ),
+  return Container(
+    width: 50,
+    height: 50,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(4),
+      color: AppColors.cardBackground,
+    ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(4),
       child: song.albumArt != null
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: Image.file(File(song.albumArt!), fit: BoxFit.cover),
-            )
+          ? Image.asset(song.albumArt!, fit: BoxFit.cover)
           : const Icon(Icons.music_note, color: AppColors.grey),
-    );
-  }
+    ),
+  );
+}
 
   void _showOptionsMenu(BuildContext context) {
     showModalBottomSheet(
@@ -68,7 +70,7 @@ class SongTile extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) {
+      builder: (ctx) {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -83,22 +85,84 @@ class SongTile extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             ListTile(
-              leading: const Icon(Icons.playlist_add,
-                  color: AppColors.white),
+              leading: const Icon(Icons.playlist_add, color: AppColors.white),
               title: const Text('Thêm vào playlist',
                   style: TextStyle(color: AppColors.white)),
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showAddToPlaylist(context);
+              },
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.info_outline, color: AppColors.white),
+              leading: const Icon(Icons.info_outline, color: AppColors.white),
               title: const Text('Thông tin bài hát',
                   style: TextStyle(color: AppColors.white)),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(ctx);
                 _showSongInfo(context);
               },
             ),
+            const SizedBox(height: 8),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAddToPlaylist(BuildContext context) {
+    final playlistProvider = context.read<PlaylistProvider>();
+
+    if (playlistProvider.playlists.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chưa có playlist! Tạo playlist trước.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            const Text(
+              'Chọn playlist',
+              style: TextStyle(
+                color: AppColors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...playlistProvider.playlists.map((playlist) {
+              return ListTile(
+                leading: const Icon(Icons.queue_music,
+                    color: AppColors.primary),
+                title: Text(playlist.name,
+                    style: const TextStyle(color: AppColors.white)),
+                subtitle: Text('${playlist.songIds.length} bài hát',
+                    style: const TextStyle(color: AppColors.grey)),
+                onTap: () {
+                  playlistProvider.addSongToPlaylist(playlist.id, song.id);
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'Đã thêm "${song.title}" vào ${playlist.name}'),
+                      backgroundColor: AppColors.primary,
+                    ),
+                  );
+                },
+              );
+            }),
             const SizedBox(height: 8),
           ],
         );
@@ -121,10 +185,11 @@ class SongTile extends StatelessWidget {
             _infoRow('Nghệ sĩ', song.artist),
             _infoRow('Album', song.album ?? 'Không rõ'),
             _infoRow(
-                'Thời lượng',
-                song.duration != null
-                    ? '${song.duration!.inMinutes}:${(song.duration!.inSeconds % 60).toString().padLeft(2, '0')}'
-                    : 'Không rõ'),
+              'Thời lượng',
+              song.duration != null
+                  ? '${song.duration!.inMinutes}:${(song.duration!.inSeconds % 60).toString().padLeft(2, '0')}'
+                  : 'Không rõ',
+            ),
           ],
         ),
         actions: [

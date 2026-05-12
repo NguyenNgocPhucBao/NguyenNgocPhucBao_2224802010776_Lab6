@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/audio_provider.dart';
@@ -29,15 +28,17 @@ class NowPlayingScreen extends StatelessWidget {
               children: [
                 _buildAppBar(context),
                 Expanded(
-                  child: Padding(
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        const SizedBox(height: 20),
+
                         // Album art
                         Container(
-                          width: 280,
-                          height: 280,
+                          width: 260,
+                          height: 260,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             color: AppColors.cardBackground,
@@ -52,14 +53,20 @@ class NowPlayingScreen extends StatelessWidget {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: song.albumArt != null
-                                ? Image.file(File(song.albumArt!),
-                                    fit: BoxFit.cover)
+                                ? Image.asset(
+                                    song.albumArt!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        const Icon(Icons.music_note,
+                                            size: 100,
+                                            color: AppColors.grey),
+                                  )
                                 : const Icon(Icons.music_note,
                                     size: 100, color: AppColors.grey),
                           ),
                         ),
 
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 30),
 
                         // Song info
                         Text(
@@ -89,7 +96,7 @@ class NowPlayingScreen extends StatelessWidget {
                           ),
                         ],
 
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 30),
 
                         // Progress bar
                         StreamBuilder<PlaybackState>(
@@ -104,42 +111,49 @@ class NowPlayingScreen extends StatelessWidget {
                           },
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
                         // Controls
                         PlayerControls(provider: provider),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
+                        // Volume
                         // Volume
                         Row(
                           children: [
-                            const Icon(Icons.volume_down,
-                                color: AppColors.grey),
+                            const Icon(Icons.volume_down, color: AppColors.grey),
                             Expanded(
-                              child: SliderTheme(
-                                data: SliderThemeData(
-                                  trackHeight: 2,
-                                  thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 5),
-                                  activeTrackColor: AppColors.grey,
-                                  inactiveTrackColor: Colors.grey[800],
-                                  thumbColor: AppColors.white,
-                                  overlayColor:
-                                      Colors.white.withOpacity(0.1),
-                                ),
-                                child: Slider(
-                                  value: 1.0,
-                                  min: 0.0,
-                                  max: 1.0,
-                                  onChanged: (v) => provider.setVolume(v),
-                                ),
+                              child: StreamBuilder<double>(
+                                stream: provider.volumeStream,
+                                initialData: 1.0,
+                                builder: (context, snapshot) {
+                                  final volume = snapshot.data ?? 1.0;
+                                  return SliderTheme(
+                                    data: SliderThemeData(
+                                      trackHeight: 2,
+                                      thumbShape: const RoundSliderThumbShape(
+                                          enabledThumbRadius: 5),
+                                      activeTrackColor: AppColors.grey,
+                                      inactiveTrackColor: Colors.grey[800],
+                                      thumbColor: AppColors.white,
+                                      overlayColor: Colors.white.withOpacity(0.1),
+                                    ),
+                                    child: Slider(
+                                      value: volume,
+                                      min: 0.0,
+                                      max: 1.0,
+                                      onChanged: (v) => provider.setVolume(v),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
-                            const Icon(Icons.volume_up,
-                                color: AppColors.grey),
+                            const Icon(Icons.volume_up, color: AppColors.grey),
                           ],
                         ),
+
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
@@ -166,8 +180,7 @@ class NowPlayingScreen extends StatelessWidget {
           const Text('Đang phát',
               style: TextStyle(color: AppColors.white, fontSize: 16)),
           IconButton(
-            icon:
-                const Icon(Icons.more_vert, color: AppColors.white),
+            icon: const Icon(Icons.more_vert, color: AppColors.white),
             onPressed: () {},
           ),
         ],

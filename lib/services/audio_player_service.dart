@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -23,14 +24,20 @@ class PlaybackState {
 class AudioPlayerService {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
+  // Thêm stream cho volume
+  double _volume = 1.0;
+  final _volumeController = StreamController<double>.broadcast();
+
   Stream<Duration> get positionStream => _audioPlayer.positionStream;
   Stream<Duration?> get durationStream => _audioPlayer.durationStream;
   Stream<PlayerState> get playerStateStream => _audioPlayer.playerStateStream;
   Stream<bool> get playingStream => _audioPlayer.playingStream;
+  Stream<double> get volumeStream => _volumeController.stream;
 
   Duration get currentPosition => _audioPlayer.position;
   Duration? get currentDuration => _audioPlayer.duration;
   bool get isPlaying => _audioPlayer.playing;
+  double get currentVolume => _volume;
 
   Stream<PlaybackState> get playbackStateStream {
     return Rx.combineLatest3<Duration, Duration?, bool, PlaybackState>(
@@ -47,7 +54,11 @@ class AudioPlayerService {
 
   Future<void> loadAudio(String filePath) async {
     try {
-      await _audioPlayer.setFilePath(filePath);
+      if (filePath.startsWith('assets/')) {
+        await _audioPlayer.setAsset(filePath);
+      } else {
+        await _audioPlayer.setFilePath(filePath);
+      }
     } catch (e) {
       throw Exception('Error loading audio: $e');
     }
@@ -62,7 +73,9 @@ class AudioPlayerService {
   }
 
   Future<void> setVolume(double volume) async {
+    _volume = volume;
     await _audioPlayer.setVolume(volume);
+    _volumeController.add(volume); // Thông báo UI cập nhật
   }
 
   Future<void> setSpeed(double speed) async {
@@ -74,6 +87,7 @@ class AudioPlayerService {
   }
 
   void dispose() {
+    _volumeController.close();
     _audioPlayer.dispose();
   }
 }

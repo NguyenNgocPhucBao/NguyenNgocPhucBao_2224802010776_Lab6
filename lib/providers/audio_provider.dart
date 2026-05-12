@@ -30,6 +30,10 @@ class AudioProvider extends ChangeNotifier {
   Stream<PlaybackState> get playbackStateStream =>
       _audioService.playbackStateStream;
 
+  // Thêm volumeStream và currentVolume
+  Stream<double> get volumeStream => _audioService.volumeStream;
+  double get currentVolume => _audioService.currentVolume;
+
   Future<void> _init() async {
     _isShuffleEnabled = await _storageService.getShuffleState();
     final repeatMode = await _storageService.getRepeatMode();
@@ -38,7 +42,6 @@ class AudioProvider extends ChangeNotifier {
     final volume = await _storageService.getVolume();
     await _audioService.setVolume(volume);
 
-    // Tự động next khi hết bài
     _audioService.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
         next();

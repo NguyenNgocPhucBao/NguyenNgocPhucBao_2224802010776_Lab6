@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/audio_provider.dart';
@@ -62,16 +61,19 @@ class MiniPlayer extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                             color: Colors.grey[800],
                           ),
-                          child: song.albumArt != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Image.file(
-                                    File(song.albumArt!),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: song.albumArt != null
+                                ? Image.asset(
+                                    song.albumArt!,
                                     fit: BoxFit.cover,
-                                  ),
-                                )
-                              : const Icon(Icons.music_note,
-                                  color: AppColors.grey),
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.music_note,
+                                        color: AppColors.grey),
+                                  )
+                                : const Icon(Icons.music_note,
+                                    color: AppColors.grey),
+                          ),
                         ),
                         const SizedBox(width: 12),
                         // Song info

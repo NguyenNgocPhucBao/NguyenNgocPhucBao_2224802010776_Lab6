@@ -1,26 +1,76 @@
-import 'package:on_audio_query/on_audio_query.dart';
-import '../models/song_model.dart' as app_model;
+import 'dart:io';
+import '../models/song_model.dart';
 
 class PlaylistService {
-  final OnAudioQuery _audioQuery = OnAudioQuery();
+  Future<List<SongModel>> getAllSongs() async {
+    List<SongModel> songs = [];
 
-  Future<List<app_model.SongModel>> getAllSongs() async {
+    // Nhạc từ assets (chạy được trên web và Android)
+    songs.addAll([
+      SongModel(
+        id: '1',
+        title: 'Kept Promise',
+        artist: 'Benjamin Lazzarus',
+        album: 'Bensound',
+        filePath: 'assets/audio/sample_songs/bensound-keptpromise.mp3',
+        duration: const Duration(minutes: 3, seconds: 15),
+        albumArt: 'assets/images/bai1.jpg',
+      ),
+      SongModel(
+        id: '2',
+        title: 'Watch The Sea',
+        artist: 'Benjamin Lazzarus',
+        album: 'Bensound',
+        filePath: 'assets/audio/sample_songs/bensound-watchthesea.mp3',
+        duration: const Duration(minutes: 4, seconds: 36),
+        albumArt: 'assets/images/bai2.jpg',
+      ),
+    ]);
+
+    // Đọc file từ thiết bị Android
     try {
-      final List<SongModel> audioList = await _audioQuery.querySongs(
-        sortType: SongSortType.TITLE,
-        orderType: OrderType.ASC_OR_SMALLER,
-        uriType: UriType.EXTERNAL,
-        ignoreCase: true,
-      );
-      return audioList
-          .map((a) => app_model.SongModel.fromAudioQuery(a))
-          .toList();
+      final directories = [
+        '/sdcard/Music',
+        '/sdcard/Download',
+        '/sdcard/Downloads',
+        '/storage/emulated/0/Music',
+        '/storage/emulated/0/Download',
+      ];
+
+      for (final dirPath in directories) {
+        final dir = Directory(dirPath);
+        if (await dir.exists()) {
+          final files = dir.listSync(recursive: true);
+          for (final file in files) {
+            if (file is File) {
+              final path = file.path.toLowerCase();
+              if (path.endsWith('.mp3') ||
+                  path.endsWith('.m4a') ||
+                  path.endsWith('.wav') ||
+                  path.endsWith('.flac') ||
+                  path.endsWith('.ogg')) {
+                final name = file.path.split('/').last;
+                final title = name.replaceAll(RegExp(r'\.[^.]+$'), '');
+                songs.add(SongModel(
+                  id: file.path.hashCode.toString(),
+                  title: title,
+                  artist: 'Unknown Artist',
+                  filePath: file.path,
+                  duration: Duration.zero,
+                ));
+              }
+            }
+          }
+        }
+      }
     } catch (e) {
-      throw Exception('Error loading songs: $e');
+      // ignore on web
     }
+
+    return songs;
   }
 
-  Future<List<app_model.SongModel>> searchSongs(String query) async {
+  Future<List<SongModel>> searchSongs(String query) async {
     final all = await getAllSongs();
     final lower = query.toLowerCase();
     return all.where((s) {
@@ -30,7 +80,7 @@ class PlaylistService {
     }).toList();
   }
 
-  Future<List<app_model.SongModel>> getSongsByArtist(String artist) async {
+  Future<List<SongModel>> getSongsByArtist(String artist) async {
     final all = await getAllSongs();
     return all.where((s) => s.artist == artist).toList();
   }
